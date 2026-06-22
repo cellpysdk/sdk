@@ -7,7 +7,7 @@
   "homepage": "https://cellpy.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cellpysdk/sdk.git",
+    "url": "git+https://github.com/cellpysdk/sdk.git",
     "directory": "runtime"
   },
   "keywords": ["cellpy", "web-components", "block", "runtime"],

@@ -1,13 +1,13 @@
 {
   "name": "@cellpysdk/react",
   "version": "0.1.0",
-  "description": "React adapter for @cellpy/runtime",
+  "description": "React adapter for @cellpysdk/runtime",
   "license": "MIT",
   "author": "Cellpy <info@cellpy.com>",
   "homepage": "https://cellpy.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cellpysdk/sdk.git",
+    "url": "git+https://github.com/cellpysdk/sdk.git",
     "directory": "react"
   },
   "keywords": ["cellpy", "web-components", "block", "react"],
@@ -28,7 +28,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cellpysdk/runtime": "file:../runtime"
+    "@cellpysdk/runtime": "^0.1.0"
   },
   "peerDependencies": {
     "react": ">=18",
