@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>@cellpysdk/runtime — local test</title>
+  <script>
+    window.CELLPY_CDN = 'http://localhost:3000/test';
+  </script>
+  <script src="../dist/runtime.iife.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 720px; margin: 3rem auto; padding: 0 1rem; }
+    h2 { font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: #888; margin: 2rem 0 .5rem; }
+    .log { font-size: .8rem; font-family: monospace; background: #f5f5f5; border-radius: 6px; padding: .75rem 1rem; margin-top: .5rem; min-height: 1.5rem; }
+    .ok  { color: #16a34a; }
+    .err { color: #dc2626; }
+
+    /* Theming test — override the block's CSS variable from the host page */
+    cellpy-block.themed { --cellpy-primary: #e63946; }
+  </style>
+</head>
+<body>
+
+  <h1>@cellpysdk/runtime local test</h1>
+
+  <h2>1 — slug embed (resolves via window.CELLPY_CDN)</h2>
+  <cellpy-block slug="hero"></cellpy-block>
+
+  <h2>2 — bad slug (should fire cellpy:error)</h2>
+  <cellpy-block id="bad" slug="does-not-exist"></cellpy-block>
+
+  <h2>3 — slug + theming (--cellpy-primary override from host page)</h2>
+  <cellpy-block class="themed" slug="hero"></cellpy-block>
+
+  <h2>Events</h2>
+  <div class="log" id="log">waiting…</div>
+
+  <script>
+    const log = document.getElementById('log');
+
+    function entry(msg, ok) {
+      const line = document.createElement('div');
+      line.className = ok ? 'ok' : 'err';
+      line.textContent = new Date().toLocaleTimeString() + '  ' + msg;
+      log.appendChild(line);
+      if (log.firstChild?.textContent === 'waiting…') log.firstChild.remove();
+    }
+
+    document.addEventListener('cellpy:ready', (e) => {
+      const el = e.target;
+      entry('cellpy:ready — ' + el.getAttribute('slug'), true);
+    });
+    document.addEventListener('cellpy:error', (e) => {
+      entry('cellpy:error — ' + e.detail.url + '  status=' + e.detail.status, false);
+    });
+
+    // Attribute change test — fires after 3 seconds, changes slug to trigger re-fetch
+    setTimeout(() => {
+      const el = document.querySelector('cellpy-block[slug="hero"]');
+      el.setAttribute('slug', 'changed-slug');
+      entry('slug changed to "changed-slug" → re-fetch triggered (expect error)', true);
+    }, 3000);
+  </script>
+
+</body>
+</html>

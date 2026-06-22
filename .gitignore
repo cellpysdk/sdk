@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+
+# Test apps
+test-app/
+angular-test-app/
+vue-test-app/
+
+# Docs
+docs/
