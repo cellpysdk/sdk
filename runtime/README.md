@@ -11,7 +11,7 @@ npm install @cellpysdk/runtime
 Or via CDN (no build step required):
 
 ```html
-<script src="https://cdn.cellpy.com/runtime.iife.js"></script>
+<script src="https://cdn.cellpy.com/runtime.js"></script>
 ```
 
 ## Usage
@@ -33,7 +33,7 @@ if (!customElements.get('cellpy-block')) {
 ### Via CDN (plain HTML)
 
 ```html
-<script src="https://cdn.cellpy.com/runtime.iife.js"></script>
+<script src="https://cdn.cellpy.com/runtime.js"></script>
 
 <cellpy-block slug="your-block-slug"></cellpy-block>
 ```
