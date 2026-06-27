@@ -1,4 +1,4 @@
-import {
+﻿import {
   defineComponent,
   ref,
   onMounted,
@@ -32,7 +32,7 @@ let _registered = false;
 
 async function ensureRegistered(): Promise<void> {
   if (_registered) return;
-  // Dynamic import keeps @cellpy/runtime out of the server bundle —
+  // Dynamic import keeps @cellpysdk/runtime out of the server bundle —
   // onMounted never runs on the server so this is never executed SSR.
   const { CellpyBlock: Block } = await import('@cellpysdk/runtime');
   if (!customElements.get('cellpy-block')) {
