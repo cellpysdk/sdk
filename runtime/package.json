@@ -1,6 +1,6 @@
 {
   "name": "@cellpysdk/runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cellpy block Web Component runtime",
   "license": "MIT",
   "author": "Cellpy <info@cellpy.com>",
