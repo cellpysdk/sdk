@@ -18,6 +18,16 @@ interface BlockJson {
   formConfig?: FormConfig;
 }
 
+interface ContainerJson {
+  // Own-storage: pointer to the block file on the user's infrastructure
+  url?: string;
+  // Cellpy-storage: content inlined directly
+  html?: string;
+  css?: string;
+  tracking?: TrackingConfig;
+  formConfig?: FormConfig;
+}
+
 const SPINNER_HTML = `<style>
   :host { display: block; }
   .cp-spinner {
@@ -105,7 +115,30 @@ export class CellpyBlock extends HTMLElement {
         return;
       }
 
-      const block: BlockJson = await response.json();
+      const container: ContainerJson = await response.json();
+
+      let block: BlockJson;
+      if (container.url) {
+        // Own-storage: container is a pointer — fetch block content from user's storage directly
+        const blockResponse = await fetch(container.url, { signal: this.abortController!.signal, cache });
+        if (!blockResponse.ok) {
+          if (!silent) {
+            this._dispatchError(blockResponse.status, container.url);
+            this._showNonRenderedState(false);
+          }
+          return;
+        }
+        const fetched = await blockResponse.json() as BlockJson;
+        // Preserve container-level tracking/formConfig if the block file doesn't carry them
+        block = {
+          ...fetched,
+          tracking: fetched.tracking ?? container.tracking,
+          formConfig: fetched.formConfig ?? container.formConfig,
+        };
+      } else {
+        block = container as BlockJson;
+      }
+
       const contentKey = `${block.html}|${block.css ?? ''}`;
 
       // skip re-render if content hasn't changed since last render
