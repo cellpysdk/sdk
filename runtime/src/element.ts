@@ -18,6 +18,18 @@ interface BlockJson {
   formConfig?: FormConfig;
 }
 
+interface ExperimentVariantJson {
+  id: string;
+  trafficPercent: number;
+  // Cellpy storage: inline content
+  html?: string;
+  css?: string;
+  // External storage: pointer to block file
+  url?: string;
+  formConfig?: FormConfig;
+  tracking: TrackingConfig;
+}
+
 interface ContainerJson {
   // Own-storage: pointer to the block file on the user's infrastructure
   url?: string;
@@ -26,6 +38,11 @@ interface ContainerJson {
   css?: string;
   tracking?: TrackingConfig;
   formConfig?: FormConfig;
+  // A/B experiment: multiple variants, client picks one and sticks to it
+  experiment?: {
+    id: string;
+    variants: ExperimentVariantJson[];
+  };
 }
 
 const SPINNER_HTML = `<style>
@@ -90,6 +107,31 @@ export class CellpyBlock extends HTMLElement {
     }
   }
 
+  private _selectVariant(experiment: ContainerJson['experiment']): ExperimentVariantJson {
+    const variants = experiment!.variants;
+    const storageKey = `cellpy_exp_${experiment!.id}`;
+
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const found = variants.find(v => v.id === stored);
+        if (found) return found;
+      }
+    } catch { /* private browsing */ }
+
+    // Weighted random selection
+    const roll = Math.random() * 100;
+    let cumulative = 0;
+    let selected = variants[variants.length - 1];
+    for (const variant of variants) {
+      cumulative += variant.trafficPercent;
+      if (roll < cumulative) { selected = variant; break; }
+    }
+
+    try { localStorage.setItem(storageKey, selected.id); } catch { /* ignore */ }
+    return selected;
+  }
+
   private async _load(silent: boolean): Promise<void> {
     this.abortController?.abort();
     this.abortController = new AbortController();
@@ -118,7 +160,33 @@ export class CellpyBlock extends HTMLElement {
       const container: ContainerJson = await response.json();
 
       let block: BlockJson;
-      if (container.url) {
+      if (container.experiment) {
+        // A/B experiment: pick a variant (sticky via localStorage) and load it
+        const variant = this._selectVariant(container.experiment);
+        if (variant.url) {
+          const variantResponse = await fetch(variant.url, { signal: this.abortController!.signal, cache });
+          if (!variantResponse.ok) {
+            if (!silent) {
+              this._dispatchError(variantResponse.status, variant.url);
+              this._showNonRenderedState(false);
+            }
+            return;
+          }
+          const fetched = await variantResponse.json() as BlockJson;
+          block = {
+            ...fetched,
+            tracking: variant.tracking,
+            formConfig: variant.formConfig ?? fetched.formConfig,
+          };
+        } else {
+          block = {
+            html: variant.html ?? '',
+            css: variant.css,
+            tracking: variant.tracking,
+            formConfig: variant.formConfig,
+          };
+        }
+      } else if (container.url) {
         // Own-storage: container is a pointer — fetch block content from user's storage directly
         const blockResponse = await fetch(container.url, { signal: this.abortController!.signal, cache });
         if (!blockResponse.ok) {
