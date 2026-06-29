@@ -367,11 +367,14 @@ export class CellpyBlock extends HTMLElement {
     });
     const url = 'https://cdn.cellpy.com/e';
     try {
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
-      } else {
-        fetch(url, { method: 'POST', body: payload, keepalive: true }).catch(() => {});
-      }
+      // sendBeacon uses credentials:'include' which conflicts with CORS wildcard origin.
+      // fetch with keepalive:true has the same "survives page unload" guarantee.
+      fetch(url, {
+        method: 'POST',
+        body: payload,
+        keepalive: true,
+        credentials: 'omit',
+      }).catch(() => {});
     } catch (_) { /* never block render */ }
   }
 
